@@ -1,0 +1,23 @@
+# import logging
+
+# logger = logging.getLogger("key_triplets")
+# logger.setLevel(logging.DEBUG)
+
+# consoleHandler = logging.StreamHandler()
+# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# consoleHandler.setFormatter(formatter)
+
+# fileHandler = logging.FileHandler("test.log")
+# fileHandler.setFormatter(formatter)
+# logger.addHandler(fileHandler)
+# logger.addHandler(consoleHandler)
+
+# file_logger = logging.getLogger("file_logger") 
+# file_logger.setLevel(logging.DEBUG)
+# new_fileHandler = logging.FileHandler("test2.log")
+# new_fileHandler.setFormatter(formatter)
+# file_logger.addHandler(new_fileHandler)
+
+
+# logger.info("command : python key_triplets.py csv_file_path pdf_folder_path protein_path")
+# file_logger.info("command : python key_triplets.py csv_file_path pdf_folder_path protein_path")
