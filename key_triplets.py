@@ -406,22 +406,9 @@ if __name__ == "__main__":
     analyzer = AminoAcidAnalyzer(dtheta, dLen, numOfLabels)
     # Generate list of proteins from csv file containing list of proteins and chain
     analyzer.readCSVProteinChain(CSV_FILE_PATH)
-    # analyzer.downloadDataSet()
+    analyzer.downloadDataSet()
 #### This is to calculate keys based on the list in proteinList using list comprehension
-    # [analyzer.calcuTheteAndKey(fileName, analyzer.chain_dict[fileName].upper()) for fileName in analyzer.proteinList[0:5]]
-
-##### This is to write in a text file
-    # with open("totalKeysMaxMinDist", "w") as totalKeysDistFile:
-    #     totalKeysDistFile.write("Protein\tChain\t#amino_acids\t#keys\t#keys_with_freq\tmax_distance\tmin_distance\n")
-    #     for fileName in analyzer.proteinList[0:5]:
-    #         chain = analyzer.chain_dict[fileName].upper()
-    #         analyzer.calcuTheteAndKey(fileName, chain)
-    #         aminoAcids = str(len(analyzer.aminoAcidCode))
-    #         totalKeys = str(len(analyzer.totalKeys))
-    #         keysWithFreq = str(len(analyzer.keyFreq))
-    #         maxDistance = str(max(analyzer.maxDistList))
-    #         minDistance = str(min(analyzer.maxDistList))
-    #         totalKeysDistFile.write(fileName+"\t"+chain+"\t"+aminoAcids+"\t"+totalKeys+"\t"+keysWithFreq+"\t"+maxDistance+"\t"+minDistance+"\n")
+    # [analyzer.calcuTheteAndKey(fileName, analyzer.chain_dict[fileName].upper()) for fileName in analyzer.proteinList]
 
 ##### This is to write in a csv file
     csv_file_path = "proteinKeysDist.csv"
@@ -429,7 +416,7 @@ if __name__ == "__main__":
     with open(csv_file_path, "w", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
         csv_writer.writerow(header)
-        for fileName in analyzer.proteinList[0:3]:
+        for fileName in analyzer.proteinList:
             chain = analyzer.chain_dict[fileName].upper()
             analyzer.calcuTheteAndKey(fileName, chain)
 
