@@ -2,6 +2,7 @@ import math
 import pandas as pd
 import requests
 import sys
+import csv
 
 args= sys.argv[1:]
 if len(args) < 3 :
@@ -52,6 +53,12 @@ class AminoAcidAnalyzer:
         self.initAminoLabel = [0, 0, 0]
         self.sortedAminoLabel = [0, 0, 0]
         self.sortedAminoIndex = [0, 0, 0]
+
+        # keys with its frequency
+        self.keyFreq = {}
+        # totak number of keys, and max distance list
+        self.totalKeys = []
+        self.maxDistList = []
 
     # This is reading the csv file and generating proteins list and separating chains and using below in the code function calcuTheteAndKey for filter in pdb file
         self.chain_dict = {}
@@ -234,8 +241,6 @@ class AminoAcidAnalyzer:
     
     # This function is used to extract alpha carbons and then calculate theta and key
     def calcuTheteAndKey(self, fileName, chain, protein_path= PROTEIN_DIR_PATH):
-        # keys with its frequency
-        keyFreq = {}
         tripletsFile = open(protein_path+"/"+fileName+"_"+chain+".keys_theta29_dist35","w")
         keyFreqFile = open(protein_path+"/"+fileName+"_"+chain+".keys_Freq_theta29_dist35","w")
         # This is the extraction of CA atoms only from the pdb file
@@ -373,22 +378,25 @@ class AminoAcidAnalyzer:
 
                     # Calculating the triplets key value
                     tripletKeys = dLen*dtheta*(numOfLabels**2)*(self.aminoAcidCode[l1_index0]-1)+dLen*dtheta*(numOfLabels)*(self.aminoAcidCode[l2_index1]-1)+dLen*dtheta*(self.aminoAcidCode[l3_index2]-1)+dtheta*(binLength-1)+(binTheta-1)
-                    print("Key Triplets", tripletKeys)
+                    # print("Key Triplets", tripletKeys)
+
+                    # Total number of keys and max distance list
+                    self.totalKeys.append(tripletKeys)
+                    self.maxDistList.append(maxDistance)
 
                     # Filtering out the distinct keys
-                    if tripletKeys in keyFreq:
-                        keyFreq[tripletKeys]+=1
+                    if tripletKeys in self.keyFreq:
+                        self.keyFreq[tripletKeys]+=1
                     else:
-                        keyFreq[tripletKeys] = 1
+                        self.keyFreq[tripletKeys] = 1
 
                     # These are the info of all the triplets
                     tripletInfoAll = (str(tripletKeys)+"\t"+str(aminoAcidR1)+"\t"+str(seqNumber1)+"\t"+str(aminoAcidR2)+"\t"+str(seqNumber2)+"\t"+str(aminoAcidR3)+"\t"+str(seqNumber3)+"\t"+str(binTheta)+"\t"+str(theta)+"\t"+str(binLength)+"\t"+str(maxDistance)+"\t"+str(aminoAcidC10)+"\t"+str(aminoAcidC11)+"\t"+str(aminoAcidC12)+"\t"+str(aminoAcidC20)+"\t"+str(aminoAcidC21)+"\t"+str(aminoAcidC22)+"\t"+str(aminoAcidC30)+"\t"+str(aminoAcidC31)+"\t"+str(aminoAcidC32)+"\n")
-                    # tripletsFile.writelines(tripletInfoAll)
-                    print("Potein-",fileName, "Chain-",chain, "aminoAcid-", len(self.aminoAcidCode))
+                    tripletsFile.writelines(tripletInfoAll)
 
         # Storing the distinct keys in a file
-        # for values in keyFreq:
-        #     keyFreqFile.writelines([str(values), '\t', str(keyFreq[values]), "\n"])            
+        for values in self.keyFreq:
+            keyFreqFile.writelines([str(values), '\t', str(self.keyFreq[values]), "\n"]) 
 
 # Usage
 if __name__ == "__main__":
@@ -399,9 +407,37 @@ if __name__ == "__main__":
     # Generate list of proteins from csv file containing list of proteins and chain
     analyzer.readCSVProteinChain(CSV_FILE_PATH)
     # analyzer.downloadDataSet()
-    # This is to calculate keys based on the list in proteinList
-    # for fileName in analyzer.proteinList:
-    #     chain = analyzer.chain_dict[fileName].upper()
-    #     analyzer.calcuTheteAndKey(fileName, chain)
-    [analyzer.calcuTheteAndKey(fileName, analyzer.chain_dict[fileName].upper()) for fileName in analyzer.proteinList]
+#### This is to calculate keys based on the list in proteinList using list comprehension
+    # [analyzer.calcuTheteAndKey(fileName, analyzer.chain_dict[fileName].upper()) for fileName in analyzer.proteinList[0:5]]
+
+##### This is to write in a text file
+    # with open("totalKeysMaxMinDist", "w") as totalKeysDistFile:
+    #     totalKeysDistFile.write("Protein\tChain\t#amino_acids\t#keys\t#keys_with_freq\tmax_distance\tmin_distance\n")
+    #     for fileName in analyzer.proteinList[0:5]:
+    #         chain = analyzer.chain_dict[fileName].upper()
+    #         analyzer.calcuTheteAndKey(fileName, chain)
+    #         aminoAcids = str(len(analyzer.aminoAcidCode))
+    #         totalKeys = str(len(analyzer.totalKeys))
+    #         keysWithFreq = str(len(analyzer.keyFreq))
+    #         maxDistance = str(max(analyzer.maxDistList))
+    #         minDistance = str(min(analyzer.maxDistList))
+    #         totalKeysDistFile.write(fileName+"\t"+chain+"\t"+aminoAcids+"\t"+totalKeys+"\t"+keysWithFreq+"\t"+maxDistance+"\t"+minDistance+"\n")
+
+##### This is to write in a csv file
+    csv_file_path = "proteinKeysDist.csv"
+    header = ["Protein", "Chain", "#amino_acids", "#keys", "#keys_with_freq", "max_distance", "min_distance"]
+    with open(csv_file_path, "w", newline="") as csvfile:
+        csv_writer = csv.writer(csvfile)
+        csv_writer.writerow(header)
+        for fileName in analyzer.proteinList[0:3]:
+            chain = analyzer.chain_dict[fileName].upper()
+            analyzer.calcuTheteAndKey(fileName, chain)
+
+            aminoAcids = str(len(analyzer.aminoAcidCode))
+            totalKeys = str(len(analyzer.totalKeys))
+            keysWithFreq = str(len(analyzer.keyFreq))
+            maxDistance = str(max(analyzer.maxDistList))
+            minDistance = str(min(analyzer.maxDistList))
+            data = [[fileName, chain, aminoAcids, totalKeys, keysWithFreq, maxDistance, minDistance]]
+            csv_writer.writerows(data)
 
