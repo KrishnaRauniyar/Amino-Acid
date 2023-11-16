@@ -3,6 +3,8 @@ import pandas as pd
 import requests
 import sys
 import csv
+import multiprocessing
+from joblib import Parallel, delayed
 
 args= sys.argv[1:]
 if len(args) < 3 :
@@ -406,25 +408,24 @@ if __name__ == "__main__":
     analyzer = AminoAcidAnalyzer(dtheta, dLen, numOfLabels)
     # Generate list of proteins from csv file containing list of proteins and chain
     analyzer.readCSVProteinChain(CSV_FILE_PATH)
-    analyzer.downloadDataSet()
+    # analyzer.downloadDataSet()
 #### This is to calculate keys based on the list in proteinList using list comprehension
     # [analyzer.calcuTheteAndKey(fileName, analyzer.chain_dict[fileName].upper()) for fileName in analyzer.proteinList]
 
+    numOfCores = multiprocessing.cpu_count()
+    print(numOfCores)
 ##### This is to write in a csv file
     csv_file_path = "proteinKeysDist.csv"
     header = ["Protein", "Chain", "#amino_acids", "#keys", "#keys_with_freq", "max_distance", "min_distance"]
     with open(csv_file_path, "w", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
         csv_writer.writerow(header)
-        for fileName in analyzer.proteinList:
-            chain = analyzer.chain_dict[fileName].upper()
-            analyzer.calcuTheteAndKey(fileName, chain)
-
+        results = Parallel(n_jobs=numOfCores, verbose=50)(delayed(analyzer.calcuTheteAndKey)(fileName, analyzer.chain_dict[fileName].upper()) for fileName in analyzer.proteinList)
+        for result, fileName in zip(results, analyzer.proteinList):
             aminoAcids = str(len(analyzer.aminoAcidCode))
             totalKeys = str(len(analyzer.totalKeys))
             keysWithFreq = str(len(analyzer.keyFreq))
             maxDistance = str(max(analyzer.maxDistList))
             minDistance = str(min(analyzer.maxDistList))
-            data = [[fileName, chain, aminoAcids, totalKeys, keysWithFreq, maxDistance, minDistance]]
+            data = [[fileName, analyzer.chain_dict[fileName].upper(), aminoAcids, totalKeys, keysWithFreq, maxDistance, minDistance]]
             csv_writer.writerows(data)
-
